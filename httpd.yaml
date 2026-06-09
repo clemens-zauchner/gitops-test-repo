@@ -1,19 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: test-app
+  name: httpd
   namespace: openshift-gitops
 spec:
   destination:
-    namespace: openshift-gitops
+    namespace: httpd
     server: https://kubernetes.default.svc
-  project: my-first-webserver
+  project: default
   source:
-    path: .
-    repoURL: https://github.com/clemens-zauchner/my-team-repo
+    path: apps/httpd
+    repoURL: https://github.com/clemens-zauchner/gitops-test-repo
     targetRevision: HEAD
   syncPolicy:
     automated:
       enabled: true
       prune: true
       selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
