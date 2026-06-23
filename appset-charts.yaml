@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: apps
+  namespace: openshift-gitops
+spec:
+  generators:
+  - git:
+      repoURL: https://github.com/clemens-zauchner/gitops-test-repo
+      revision: HEAD
+      directories:
+      - path: appset-charts/**/config.yaml
+  template:
+    metadata:
+      name: "chart-{{ path.basename }}"
+    spec:
+      destination:
+        namespace: "chart-{{ path.basename }}"
+        server: https://kubernetes.default.svc
+      project: default
+      sources:
+      - repoURL: https://github.com/clemens-zauchner/gitops-test-repo
+        targetRevision: main
+        ref: values
+      - repoURL: '{{ .repoURL }}' 
+        targetRevision: '{{ .targetRevision }}'
+        chart: '{{ .chart }}'
+        helm:
+          releaseName: '{{ .chart }}'
+          valueFiles:
+            - $values/appset-charts/{{ .path.basename }}/values.yaml
+          ignoreMissingValueFiles: true
+      syncPolicy:
+        automated:
+          enabled: true
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
